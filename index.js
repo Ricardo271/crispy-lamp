@@ -1,16 +1,26 @@
 const fs = require('fs');
+const path = require('path');
 const { Client, Collection, Intents, Interaction } = require('discord.js');
 const { token } = require('./config.json');
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
 client.commands = new Collection();
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
-for (const file of commandFiles) {
-    const command = require(`./commands/${file}`);
-    client.commands.set(command.data.name, command);
+const readCommands = (dir) => {
+    const files = fs.readdirSync(path.join(__dirname, dir));
+    for (const file of files) {
+        const stat = fs.lstatSync(path.join(__dirname, dir, file));
+        if (stat.isDirectory()) {
+            readCommands(path.join(dir, file));
+        } else if (file.endsWith('.js')) {
+            const command = require(`./commands/${file}`);
+            client.commands.set(command.data.name, command);
+        }
+    }
 }
+
+readCommands('./commands');
 
 client.once('ready', () => {
     console.log('Ready!');
