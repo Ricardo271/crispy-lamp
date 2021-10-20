@@ -14,7 +14,7 @@ const readCommands = (dir) => {
         if (stat.isDirectory()) {
             readCommands(path.join(dir, file));
         } else if (file.endsWith('.js')) {
-            const command = require(`./commands/${file}`);
+            const command = require(path.join(__dirname, dir, file));
             client.commands.set(command.data.name, command);
         }
     }

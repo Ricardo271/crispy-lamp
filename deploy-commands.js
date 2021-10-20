@@ -13,7 +13,7 @@ const pushCommands = (dir) => {
 		if (stat.isDirectory()) {
 			pushCommands(path.join(dir, file));
 		} else if (file.endsWith('.js')) {
-			const command = require(`./commands/${file}`);
+			const command = require(path.join(__dirname, dir, file));
 			commands.push(command.data.toJSON());
 		}
 	}
