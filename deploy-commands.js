@@ -19,6 +19,8 @@ const pushCommands = (dir) => {
 	}
 }
 
+pushCommands('./commands');
+
 const rest = new REST({ version: '9' }).setToken(token);
 
 (async () => {
