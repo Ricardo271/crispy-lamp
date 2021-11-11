@@ -3,7 +3,7 @@ const path = require('path');
 const { Client, Collection, Intents, Interaction } = require('discord.js');
 const { token } = require('./config.json');
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] });
 
 client.commands = new Collection();
 
@@ -37,7 +37,7 @@ client.on('interactionCreate', async interaction => {
         await command.execute(interaction);
     } catch (error) {
         console.error(error);
-        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: ture});
+        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true});
     }
 })
 
