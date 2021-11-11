@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 
-const { joinVoiceChannel, createAudioPlayer } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, AudioPlayerStatus, createAudioResource } = require('@discordjs/voice');
 
 const ytdl = require('ytdl-core');
 const ytSearch = require('yt-search');
@@ -11,7 +11,7 @@ const player = createAudioPlayer();
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('play')
+        .setName('playoutdated')
         .setDescription('Plays a youtube video')
         .addStringOption(option =>
             option.setName('request')
@@ -62,7 +62,7 @@ module.exports = {
                     channelId: voice_channel.id,
                     guildId: voice_channel.guildId,
                     adapterCreator: voice_channel.guild.voiceAdapterCreator,
-                });
+                }).subscribe(player);
 
                 queue_constructor.connection = connection;
                 video_player(interaction.guild, queue_constructor.songs[0]);
@@ -84,14 +84,29 @@ const video_player = async (guild, song) => {
     const song_queue = queue.get(guild.id);
 
     if (!song) {
-        queue.delete(quild.id);
+        queue.delete(guild.id);
+        console.log('Deletou guild.id');
         return;
     }
+
     const stream = ytdl(song.url, { filter: 'audioonly' });
-    song_queue.connection.play(stream, { seek: 0, volume: 0.5 })
-    .on('finish', () => {
+    const resource = createAudioResource(stream);
+
+    player.play(resource);
+
+    player.on(AudioPlayerStatus.Playing, () => {
+        console.log('Playing');
+    });
+    player.on(AudioPlayerStatus.Idle, () => {
+        console.log('Idle');
         song_queue.songs.shift();
         video_player(guild, song_queue.songs[0]);
     });
+    player.on('error', error => {
+        console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+        song_queue.songs.shift();
+        video_player(guild, song_queue.songs[0]);
+    })
+
     await song_queue.text_channel.send(`Now playing **${song.title}**`);
 }
