@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, Interaction } = require('@discordjs/builders');
+const play = require('../../playlist');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -9,6 +10,7 @@ module.exports = {
                 .setDescription('Link or search term')
                 .setRequired(true)),
     async execute(interaction) {
-        await interaction.reply('YEY!');
+        play.play(interaction);
+        //await interaction.reply('funfou');
     },
 };
