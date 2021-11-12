@@ -1,10 +1,11 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { stop }= require('../../playlist');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('stop')
-        .setDescription('Stops the songs playing.'),
+        .setDescription('Clears the queue and leave the voice channel.'),
     async execute(interaction) {
-        await interaction.reply('Stops the songs playing');
+        stop(interaction);
     },
 };

@@ -1,4 +1,4 @@
-const { joinVoiceChannel, createAudioPlayer, AudioPlayerStatus, createAudioResource } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, AudioPlayerStatus, createAudioResource, getVoiceConnection } = require('@discordjs/voice');
 
 const ytdl = require('ytdl-core');
 const ytSearch = require('yt-search');
@@ -13,7 +13,7 @@ async function play(interaction) {
 
     const voice_channel = interaction.member.voice.channel;
     if (!voice_channel) {
-        return interaction.reply({ content: 'You need to be in a voice channel to execute this command!', ephemeral: true});
+        return interaction.reply({ content: 'You need to be in a voice channel to execute this command!', ephemeral: true });
     }
 
     const server_queue = queue.get(interaction.guildId);
@@ -69,7 +69,7 @@ async function play(interaction) {
 
     } else {
         server_queue.songs.push(song);
-        console.log('pushed ',songs);
+        console.log('pushed ', songs);
         return interaction.reply(`**${song.title}** added to queue!`);
     }
 
@@ -77,7 +77,7 @@ async function play(interaction) {
 
 const video_player = async (guild, song, interaction) => {
     const song_queue = queue.get(guild.id);
-    
+
     if (!song) {
         queue.delete(guild.id);
         console.log('Deletou guild.id');
@@ -87,26 +87,30 @@ const video_player = async (guild, song, interaction) => {
         console.log('song_queue inexistente.');
         return;
     }
-    
+
     const stream = ytdl(song.url, { filter: 'audioonly' });
     const resource = createAudioResource(stream);
-    
+
     player.play(resource);
-    
+
     player.once(AudioPlayerStatus.Playing, () => {
         console.log('Playing');
     });
     player.once(AudioPlayerStatus.Idle, () => {
+        if (looping) {
+            player.play(resource);
+        }
         console.log('Idle');
         song_queue.songs.shift();
         video_player(guild, song_queue.songs[0], interaction);
     });
     player.on('error', error => {
-        console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+        console.log(error);
+        //console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
         song_queue.songs.shift();
         video_player(guild, song_queue.songs[0], interaction);
     });
-    
+
     if (interaction.replied) {
         return await interaction.followUp(`Now playing **${song.title}**`);
     } else {
@@ -114,8 +118,15 @@ const video_player = async (guild, song, interaction) => {
     }
 }
 
-function stop() {
+function stop(interaction) {
+    queue.delete(interaction.guildId);
+    console.log('Stop -> Deletou guild.id');
 
+    const connection = getVoiceConnection(interaction.guildId);
+    if (!connection) return interaction.reply('I am not in a voice channel.');
+
+    connection.destroy();
+    return interaction.reply('Left the voice channel');
 }
 
 function skip(interaction) {
@@ -124,14 +135,14 @@ function skip(interaction) {
     return interaction.reply('Skipped song.');
 }
 
-function loop() {
+function loop(interaction) {
     looping = !looping;
-    return looping;
+    return interaction.reply(`Looping set to ${looping}`);
 }
 
 module.exports = {
-    play : play,
-    stop : stop,
-    skip : skip,
-    loop : loop,
+    play: play,
+    stop: stop,
+    skip: skip,
+    loop: loop,
 };
