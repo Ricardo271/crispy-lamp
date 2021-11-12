@@ -69,19 +69,20 @@ async function play(interaction) {
 
     } else {
         server_queue.songs.push(song);
+        console.log('pushed ',songs);
         return interaction.reply(`**${song.title}** added to queue!`);
     }
 
-    console.log(songs);
 };
 
 function stop() {
 
 }
 
-function skip() {
+function skip(interaction) {
     songs.shift();
-    console.log(songs);
+    player.stop();
+    return interaction.reply('Skipped song.');
 }
 
 function loop() {
@@ -97,27 +98,35 @@ const video_player = async (guild, song, interaction) => {
         console.log('Deletou guild.id');
         return;
     }
+    if (!song_queue) {
+        console.log('song_queue inexistente.');
+        return;
+    }
 
     const stream = ytdl(song.url, { filter: 'audioonly' });
     const resource = createAudioResource(stream);
 
     player.play(resource);
 
-    player.on(AudioPlayerStatus.Playing, () => {
+    player.once(AudioPlayerStatus.Playing, () => {
         console.log('Playing');
     });
-    player.on(AudioPlayerStatus.Idle, () => {
+    player.once(AudioPlayerStatus.Idle, () => {
         console.log('Idle');
         song_queue.songs.shift();
-        video_player(guild, song_queue.songs[0]);
+        video_player(guild, song_queue.songs[0], interaction);
     });
     player.on('error', error => {
         console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
         song_queue.songs.shift();
-        video_player(guild, song_queue.songs[0]);
+        video_player(guild, song_queue.songs[0], interaction);
     });
 
-    return interaction.reply(`Now playing **${song.title}**`);
+    if (interaction.replied) {
+        return await interaction.followUp(`Now playing **${song.title}**`);
+    } else {
+        return await interaction.reply(`Now playing **${song.title}**`);
+    }
 }
 
 module.exports = {
