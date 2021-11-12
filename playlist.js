@@ -75,24 +75,9 @@ async function play(interaction) {
 
 };
 
-function stop() {
-
-}
-
-function skip(interaction) {
-    songs.shift();
-    player.stop();
-    return interaction.reply('Skipped song.');
-}
-
-function loop() {
-    looping = !looping;
-    return looping;
-}
-
 const video_player = async (guild, song, interaction) => {
     const song_queue = queue.get(guild.id);
-
+    
     if (!song) {
         queue.delete(guild.id);
         console.log('Deletou guild.id');
@@ -102,12 +87,12 @@ const video_player = async (guild, song, interaction) => {
         console.log('song_queue inexistente.');
         return;
     }
-
+    
     const stream = ytdl(song.url, { filter: 'audioonly' });
     const resource = createAudioResource(stream);
-
+    
     player.play(resource);
-
+    
     player.once(AudioPlayerStatus.Playing, () => {
         console.log('Playing');
     });
@@ -121,12 +106,27 @@ const video_player = async (guild, song, interaction) => {
         song_queue.songs.shift();
         video_player(guild, song_queue.songs[0], interaction);
     });
-
+    
     if (interaction.replied) {
         return await interaction.followUp(`Now playing **${song.title}**`);
     } else {
         return await interaction.reply(`Now playing **${song.title}**`);
     }
+}
+
+function stop() {
+
+}
+
+function skip(interaction) {
+    songs.shift();
+    player.stop();
+    return interaction.reply('Skipped song.');
+}
+
+function loop() {
+    looping = !looping;
+    return looping;
 }
 
 module.exports = {
