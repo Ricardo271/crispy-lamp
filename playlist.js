@@ -97,17 +97,17 @@ const video_player = async (guild, song, interaction) => {
         console.log('Playing');
     });
     player.once(AudioPlayerStatus.Idle, () => {
-        if (looping) {
-            player.play(resource);
-        }
         console.log('Idle');
-        song_queue.songs.shift();
+        if (looping) {
+            song_queue.songs.push(song);
+        } 
+        song_queue.songs.shift();    
         video_player(guild, song_queue.songs[0], interaction);
     });
     player.on('error', error => {
-        console.log(error);
         //console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-        song_queue.songs.shift();
+        console.log(error.message);
+        if (!looping) song_queue.songs.shift();
         video_player(guild, song_queue.songs[0], interaction);
     });
 

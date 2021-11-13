@@ -11,6 +11,5 @@ module.exports = {
                 .setRequired(true)),
     async execute(interaction) {
         play(interaction);
-        //await interaction.reply('funfou');
     },
 };
